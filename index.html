@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualización de σ-alineamiento</title>
+    <style>
+        body {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .programs-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .program {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .program::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .program-title {
+            text-align: center;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            margin: -20px -20px 20px -20px;
+            font-weight: bold;
+            font-size: 1.2em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .code-line {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin: 2px 0;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .line-number {
+            width: 30px;
+            color: #888;
+            font-size: 0.9em;
+            margin-right: 15px;
+            text-align: right;
+        }
+        
+        .code-content {
+            flex: 1;
+            font-family: 'Consolas', monospace;
+        }
+        
+        .shared {
+            background: linear-gradient(90deg, rgba(46, 204, 113, 0.2), rgba(52, 152, 219, 0.2));
+            border-left: 4px solid #27ae60;
+            transform: translateX(2px);
+        }
+        
+        .specific {
+            background: linear-gradient(90deg, rgba(241, 196, 15, 0.2), rgba(230, 126, 34, 0.2));
+            border-left: 4px solid #f39c12;
+        }
+        
+        .execution-path {
+            background: linear-gradient(90deg, rgba(231, 76, 60, 0.3), rgba(192, 57, 43, 0.3));
+            border-left: 4px solid #e74c3c;
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+        }
+        
+        .keyword { color: #8e44ad; font-weight: bold; }
+        .type { color: #3498db; font-weight: bold; }
+        .function { color: #e67e22; font-weight: bold; }
+        .string { color: #27ae60; }
+        .number { color: #e74c3c; }
+        .comment { color: #95a5a6; font-style: italic; }
+        
+        .sigma-mapping {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            color: #333;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .sigma-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            text-align: center;
+        }
+        
+        .mapping-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .mapping-pair {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .mapping-pair:hover {
+            transform: translateY(-2px);
+        }
+        
+        .execution-analysis {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            color: #333;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .scenario {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .scenario-title {
+            font-weight: bold;
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+        
+        .path {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        
+        .alignment-result {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        .aligned {
+            background: rgba(39, 174, 96, 0.2);
+            border-left: 4px solid #27ae60;
+            color: #27ae60;
+        }
+        
+        .misaligned {
+            background: rgba(231, 76, 60, 0.2);
+            border-left: 4px solid #e74c3c;
+            color: #e74c3c;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .shared-color { background: linear-gradient(90deg, rgba(46, 204, 113, 0.8), rgba(52, 152, 219, 0.8)); }
+        .specific-color { background: linear-gradient(90deg, rgba(241, 196, 15, 0.8), rgba(230, 126, 34, 0.8)); }
+        .execution-color { background: linear-gradient(90deg, rgba(231, 76, 60, 0.8), rgba(192, 57, 43, 0.8)); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Visualización de σ-alineamiento</h1>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color shared-color"></div>
+                <span>Código Compartido (σ)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color specific-color"></div>
+                <span>Código Específico</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color execution-color"></div>
+                <span>Ruta de Ejecución</span>
+            </div>
+        </div>
+        
+        <div class="programs-container">
+            <div class="program">
+                <div class="program-title">Programa Oráculo (OP)</div>
+                <div class="code-line shared" data-line="2">
+                    <div class="line-number">2</div>
+                    <div class="code-content"><span class="type">int</span> R = <span class="number">10</span>;</div>
+                </div>
+                <div class="code-line shared" data-line="3">
+                    <div class="line-number">3</div>
+                    <div class="code-content"><span class="type">int</span> P = <span class="function">argv</span>[<span class="number">1</span>] ? <span class="function">atoi</span>(<span class="function">argv</span>[<span class="number">1</span>]) : <span class="number">0</span>;</div>
+                </div>
+                <div class="code-line shared" data-line="4">
+                    <div class="line-number">4</div>
+                    <div class="code-content"><span class="type">int</span> A = <span class="number">0</span>;</div>
+                </div>
+                <div class="code-line shared" data-line="6">
+                    <div class="line-number">6</div>
+                    <div class="code-content"><span class="keyword">if</span> (<span class="function">Cond1</span>(P)) {</div>
+                </div>
+                <div class="code-line shared" data-line="7">
+                    <div class="line-number">7</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;A = <span class="function">AComputation</span>(P);</div>
+                </div>
+                <div class="code-line shared" data-line="8">
+                    <div class="line-number">8</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (<span class="function">Cond</span>(A)) {</div>
+                </div>
+                <div class="code-line shared" data-line="9">
+                    <div class="line-number">9</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R = <span class="function">HeavyRComputation</span>(P, A);</div>
+                </div>
+                <div class="code-line specific" data-line="10">
+                    <div class="line-number">10</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;} <span class="keyword">else</span> {</div>
+                </div>
+                <div class="code-line specific" data-line="11">
+                    <div class="line-number">11</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R = <span class="function">RComputation</span>(P, A);</div>
+                </div>
+                <div class="code-line specific" data-line="12">
+                    <div class="line-number">12</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                </div>
+                <div class="code-line specific" data-line="13">
+                    <div class="line-number">13</div>
+                    <div class="code-content">}</div>
+                </div>
+                <div class="code-line shared" data-line="15">
+                    <div class="line-number">15</div>
+                    <div class="code-content"><span class="keyword">return</span> R;</div>
+                </div>
+            </div>
+            
+            <div class="program">
+                <div class="program-title">Programa Bajo Análisis (PUA)</div>
+                <div class="code-line shared" data-line="2">
+                    <div class="line-number">2</div>
+                    <div class="code-content"><span class="type">int</span> R = <span class="number">10</span>;</div>
+                </div>
+                <div class="code-line shared" data-line="3">
+                    <div class="line-number">3</div>
+                    <div class="code-content"><span class="type">int</span> P = <span class="function">argv</span>[<span class="number">1</span>] ? <span class="function">atoi</span>(<span class="function">argv</span>[<span class="number">1</span>]) : <span class="number">0</span>;</div>
+                </div>
+                <div class="code-line shared" data-line="4">
+                    <div class="line-number">4</div>
+                    <div class="code-content"><span class="type">int</span> A = <span class="number">0</span>;</div>
+                </div>
+                <div class="code-line specific" data-line="6">
+                    <div class="line-number">6</div>
+                    <div class="code-content"><span class="keyword">if</span> (<span class="function">Cond0</span>(P)) {</div>
+                </div>
+                <div class="code-line specific" data-line="7">
+                    <div class="line-number">7</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;<span class="function">logMessage</span>(<span class="string">"Error0"</span>);</div>
+                </div>
+                <div class="code-line specific" data-line="8">
+                    <div class="line-number">8</div>
+                    <div class="code-content">} <span class="keyword">else</span> {</div>
+                </div>
+                <div class="code-line shared" data-line="9">
+                    <div class="line-number">9</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (<span class="function">Cond1</span>(P)) {</div>
+                </div>
+                <div class="code-line shared" data-line="10">
+                    <div class="line-number">10</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A = <span class="function">AComputation</span>(P);</div>
+                </div>
+                <div class="code-line shared" data-line="11">
+                    <div class="line-number">11</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (<span class="function">Cond</span>(A)) {</div>
+                </div>
+                <div class="code-line shared" data-line="12">
+                    <div class="line-number">12</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R = <span class="function">HeavyRComputation</span>(P, A);</div>
+                </div>
+                <div class="code-line specific" data-line="13">
+                    <div class="line-number">13</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} <span class="keyword">else</span> {</div>
+                </div>
+                <div class="code-line specific" data-line="14">
+                    <div class="line-number">14</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;R = <span class="function">ChangedRComputation</span>(P, A);</div>
+                </div>
+                <div class="code-line specific" data-line="15">
+                    <div class="line-number">15</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                </div>
+                <div class="code-line specific" data-line="16">
+                    <div class="line-number">16</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;} <span class="keyword">else</span> {</div>
+                </div>
+                <div class="code-line specific" data-line="17">
+                    <div class="line-number">17</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="function">logMessage</span>(<span class="string">"Error"</span>);</div>
+                </div>
+                <div class="code-line specific" data-line="18">
+                    <div class="line-number">18</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;}</div>
+                </div>
+                <div class="code-line specific" data-line="19">
+                    <div class="line-number">19</div>
+                    <div class="code-content">&nbsp;&nbsp;&nbsp;&nbsp;<span class="function">logValue</span>(R);</div>
+                </div>
+                <div class="code-line specific" data-line="20">
+                    <div class="line-number">20</div>
+                    <div class="code-content">}</div>
+                </div>
+                <div class="code-line shared" data-line="22">
+                    <div class="line-number">22</div>
+                    <div class="code-content"><span class="keyword">return</span> R;</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sigma-mapping">
+            <div class="sigma-title">Relación de Emparejamiento σ</div>
+            <div class="mapping-grid">
+                <div class="mapping-pair">(2,2)</div>
+                <div class="mapping-pair">(3,3)</div>
+                <div class="mapping-pair">(4,4)</div>
+                <div class="mapping-pair">(6,9)</div>
+                <div class="mapping-pair">(7,10)</div>
+                <div class="mapping-pair">(8,11)</div>
+                <div class="mapping-pair">(9,12)</div>
+                <div class="mapping-pair">(15,22)</div>
+            </div>
+            <p style="text-align: center; color: #7f8c8d; font-style: italic;">
+                Cada par (OP, PUA) representa líneas de código compartido entre ambos programas
+            </p>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="showScenario1()">Escenario 1: Cond0(P) = True</button>
+            <button class="btn" onclick="showScenario2()">Escenario 2: Cond1(P) = True</button>
+            <button class="btn" onclick="clearExecution()">Limpiar Ejecución</button>
+        </div>
+        
+        <div class="execution-analysis">
+            <div class="sigma-title">Análisis de σ-alineamiento</div>
+            <div id="execution-content">
+                <p style="text-align: center; color: #7f8c8d; font-style: italic;">
+                    Selecciona un escenario para analizar el σ-alineamiento
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function clearExecution() {
+            // Limpiar todas las clases de ejecución
+            document.querySelectorAll('.code-line').forEach(line => {
+                line.classList.remove('execution-path');
+            });
+            
+            // Limpiar el contenido del análisis
+            document.getElementById('execution-content').innerHTML = `
+                <p style="text-align: center; color: #7f8c8d; font-style: italic;">
+                    Selecciona un escenario para analizar el σ-alineamiento
+                </p>
+            `;
+        }
+        
+        function showScenario1() {
+            clearExecution();
+            
+            // Resaltar rutas de ejecución para Cond0(P) = True
+            const puaLines = [2, 3, 4, 6, 7, 22];
+            const opLines = [2, 3, 4, 6]; // El OP siempre pasa por estas líneas
+            
+            // Resaltar PUA
+            document.querySelectorAll('.program')[1].querySelectorAll('.code-line').forEach(line => {
+                const lineNum = parseInt(line.getAttribute('data-line'));
+                if (puaLines.includes(lineNum)) {
+                    line.classList.add('execution-path');
+                }
+            });
+            
+            // Resaltar OP
+            document.querySelectorAll('.program')[0].querySelectorAll('.code-line').forEach(line => {
+                const lineNum = parseInt(line.getAttribute('data-line'));
+                if (opLines.includes(lineNum)) {
+                    line.classList.add('execution-path');
+                }
+            });
+            
+            // Mostrar análisis
+            document.getElementById('execution-content').innerHTML = `
+                <div class="scenario">
+                    <div class="scenario-title">Escenario 1: Cond0(P) = True</div>
+                    <div class="path">
+                        <strong>Ruta PUA:</strong> 2 → 3 → 4 → 6 → 7 → 22<br>
+                        <strong>Nodos σ en PUA:</strong> 2, 3, 4, 22
+                    </div>
+                    <div class="path">
+                        <strong>Ruta OP (prefijo):</strong> 2 → 3 → 4 → 6 → ...<br>
+                        <strong>Nodos σ en OP:</strong> 2, 3, 4, 6
+                    </div>
+                    <div class="alignment-result misaligned">
+                        ❌ EJECUCIONES NO σ-ALINEADAS
+                    </div>
+                    <p><strong>Razón:</strong> El PUA ejecuta la línea 22 (emparejada con 15 del OP) sin ejecutar la línea 9 (emparejada con 6 del OP). Sin embargo, cualquier ejecución válida del OP debe pasar por la línea 6, creando una inconsistencia en el orden de ejecución de los fragmentos compartidos.</p>
+                </div>
+            `;
+        }
+        
+        function showScenario2() {
+            clearExecution();
+            
+            // Resaltar rutas de ejecución para Cond1(P) = True, Cond(A) = True
+            const puaLines = [2, 3, 4, 9, 10, 11, 12, 19, 22];
+            const opLines = [2, 3, 4, 6, 7, 8, 9, 15];
+            
+            // Resaltar PUA
+            document.querySelectorAll('.program')[1].querySelectorAll('.code-line').forEach(line => {
+                const lineNum = parseInt(line.getAttribute('data-line'));
+                if (puaLines.includes(lineNum)) {
+                    line.classList.add('execution-path');
+                }
+            });
+            
+            // Resaltar OP
+            document.querySelectorAll('.program')[0].querySelectorAll('.code-line').forEach(line => {
+                const lineNum = parseInt(line.getAttribute('data-line'));
+                if (opLines.includes(lineNum)) {
+                    line.classList.add('execution-path');
+                }
+            });
+            
+            // Mostrar análisis
+            document.getElementById('execution-content').innerHTML = `
+                <div class="scenario">
+                    <div class="scenario-title">Escenario 2: Cond0(P) = False, Cond1(P) = True, Cond(A) = True</div>
+                    <div class="path">
+                        <strong>Ruta PUA:</strong> 2 → 3 → 4 → 9 → 10 → 11 → 12 → 19 → 22<br>
+                        <strong>Nodos σ en PUA:</strong> 2, 3, 4, 9, 10, 11, 12, 22
+                    </div>
+                    <div class="path">
+                        <strong>Ruta OP:</strong> 2 → 3 → 4 → 6 → 7 → 8 → 9 → 15<br>
+                        <strong>Nodos σ en OP:</strong> 2, 3, 4, 6, 7, 8, 9, 15
+                    </div>
+                    <div class="alignment-result aligned">
+                        ✅ EJECUCIONES σ-ALINEADAS
+                    </div>
+                    <p><strong>Razón:</strong> Los fragmentos compartidos se ejecutan en el mismo orden relativo:</p>
+                    <ul>
+                        <li>Inicialización: (2,2) → (3,3) → (4,4)</li>
+                        <li>Lógica principal: (6,9) → (7,10) → (8,11) → (9,12)</li>
+                        <li>Finalización: (15,22)</li>
+                    </ul>
+                    <p>Los estados de memoria en los nodos emparejados son observacionalmente equivalentes.</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
