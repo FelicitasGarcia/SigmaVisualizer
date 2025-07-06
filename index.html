@@ -805,7 +805,7 @@
                 { op: [4], pua: [4], description: "Inicialización de A = 0", node: "node-3", edges: ["edge-3-4"] },
                 { op: [], pua: [6], description: "Evaluación de Cond0(P) = True", node: "node-4", edges: ["edge-4--1"] },
                 { op: [], pua: [7], description: "Ejecución de logMessage('Error0')", node: "node--1", edges: [] },
-                { op: [], pua: [22], description: "Retorno de R - Estado IV (Invalid)", node: "node--1", edges: [] }
+                { op: [], pua: [22], description: "Retorno de R - Estado IV (Impossible to Verify)", node: "node--1", edges: [] }
             ];
             
             // Resaltar todas las rutas de ejecución
@@ -828,12 +828,12 @@
                     </div>
                     <div class="path">
                         <strong>Flujo del Monitor:</strong> 1(NV) → 2(NV) → 3(NV) → 4(NV) → -1(IV)<br>
-                        <strong>Estado Final:</strong> IV (Invalid) - Violación detectada
+                        <strong>Estado Final:</strong> IV (Impossible to Verify) - Inconsistencia detectada
                     </div>
                     <div class="alignment-result misaligned">
                         ❌ NO σ-ALINEADAS
                     </div>
-                    <p><strong>Razón:</strong> El PUA ejecuta la línea 22 (emparejada con 15 del OP) sin que el OP ejecute su línea correspondiente. El monitor detecta esta violación y lleva al estado IV (Invalid).</p>
+                    <p><strong>Razón:</strong> El PUA ejecuta la línea 22 (emparejada con 15 del OP) sin que el OP ejecute su línea correspondiente. El monitor detecta esta inconsistencia y lleva al estado IV (Impossible to Verify).</p>
                 </div>
             `;
             
@@ -855,7 +855,7 @@
                 { op: [8], pua: [11], description: "Evaluación de Cond(A) = True", node: "node-8", edges: ["edge-8-10"] },
                 { op: [9], pua: [12], description: "Cálculo de R = HeavyRComputation(P, A)", node: "node-10", edges: ["edge-10--2"] },
                 { op: [], pua: [19], description: "Ejecución de logValue(R)", node: "node--2", edges: [] },
-                { op: [15], pua: [22], description: "Retorno de R - Estado V (Valid)", node: "node--2", edges: [] }
+                { op: [15], pua: [22], description: "Retorno de R - Estado V (Verified)", node: "node--2", edges: [] }
             ];
             
             // Resaltar todas las rutas de ejecución
@@ -878,12 +878,12 @@
                     </div>
                     <div class="path">
                         <strong>Flujo del Monitor:</strong> 1(NV) → 2(NV) → 3(NV) → 4(NV) → 6(NV) → 7(NV) → 8(NV) → 10(NV) → -2(V)<br>
-                        <strong>Estado Final:</strong> V (Valid) - Ejecución válida
+                        <strong>Estado Final:</strong> V (Verified) - Ejecución verificada
                     </div>
                     <div class="alignment-result aligned">
                         ✅ σ-ALINEADAS
                     </div>
-                    <p><strong>Razón:</strong> Los fragmentos compartidos se ejecutan en el mismo orden relativo. El monitor mantiene estados NV (No Violation) durante toda la ejecución y termina en estado V (Valid), confirmando que la secuencia de operaciones respeta el σ-alineamiento.</p>
+                    <p><strong>Razón:</strong> Los fragmentos compartidos se ejecutan en el mismo orden relativo. El monitor mantiene estados NV (Non Verified) durante toda la ejecución y termina en estado V (Verified), confirmando que la secuencia de operaciones respeta el σ-alineamiento.</p>
                     <ul>
                         <li>Inicialización: (2,2) → (3,3) → (4,4)</li>
                         <li>Lógica principal: (6,9) → (7,10) → (8,11) → (9,12)</li>
